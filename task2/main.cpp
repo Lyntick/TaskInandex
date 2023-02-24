@@ -51,7 +51,7 @@ int main(){
                 if(vec[index] < r - l){
                     vec[index] = r - l;
                 }
-                r++;
+                ++r;
                 break;
             }
 
@@ -71,6 +71,7 @@ int main(){
     if (outFile.is_open()) {
         outFile << *result;
     }
+    outFile.close();
 
     return 0;
 }
@@ -140,7 +141,7 @@ int main(){
 //
 //
 //    auto result = std::max_element(vec.begin(), vec.end());
-////
+//
 //    std::ofstream outFile("output.txt");
 //    if (outFile.is_open()) {
 //        outFile << *result;

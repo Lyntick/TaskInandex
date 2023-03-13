@@ -1,78 +1,112 @@
 #include <iostream>
 #include <fstream>
-#include <unordered_map>
 #include <algorithm>
+#include <vector>
 
 
+int binaryS(int l , int r, std::uint64_t elem, const std::vector<std::uint64_t>& diegoCarts){// -2 less, -1 bigger
 
 
+    int middle = (l + r) / 2;
+
+
+    if(elem == diegoCarts[middle]){
+        return  middle;
+    }else if(elem < diegoCarts[middle]){
+        binaryS(l , middle, elem, diegoCarts);
+    }else{
+        binaryS(middle, r, elem, diegoCarts);
+    }
+};
 
 int main(){
     std::ifstream inFile("input.txt");
-    std::string buf;
-    int k = 0;
+    int n = 0, k = 0;// n - number diego carts, k - number collectors
+    std::vector<std::uint64_t> diegoCarts;
+    std::vector<int> collectorsCarts;
 
-    buf.reserve(200000);
     if (inFile.is_open()) {
+        inFile >> n;
+        diegoCarts.reserve(n);
+        inFile.get();//skip '\n'
+        diegoCarts.resize(n);
+        for(int i = 0; i < n; ++i){
+            inFile >> diegoCarts[i];
+        }
+        inFile.get();//skip '\n'
         inFile >> k;
-        inFile.get();
-        std::getline(inFile, buf);
+        collectorsCarts.reserve(k);
+        collectorsCarts.resize(k);
+        for(int i = 0; i < k; ++i){
+            inFile >> collectorsCarts[i];
+        }
     }else{
-        return 0;
+        return -1;
     }
     inFile.close();
-    //solution
-    std::unordered_map<char, int> unorderedMap;
-    unorderedMap.reserve(23);
-    int counter = k;
-    char preChar = buf[0];
-    int indexToStart = -1;
-    int sizeOfsymbols = 1;
-    for(int i = 0; i <= buf.size(); ++i){
+    std::vector<int> result;
+    if(n != 0 && k != 0){
+        result.resize(k);
+        //sorting
+        std::sort(diegoCarts.begin(), diegoCarts.end());
+        //for solution use std::unique(iter.begin, iter.end);
+        auto last = std::unique(diegoCarts.begin(),diegoCarts.end());
+        diegoCarts.erase(last, diegoCarts.end());// it's not necessary, just print from begin to last;
+        //binary search then
+        auto binaryS = [&diegoCarts](int l , int r, std::uint64_t elem, bool& isExist) -> int{
+            while(l <= r){
 
-
-        if(i == buf.size() || preChar != buf[i]){
-            if(indexToStart == -1){
-                indexToStart = i;
-            }
-            if(counter == 0){
-                auto iterMap = unorderedMap.find(preChar);
-                if(iterMap == unorderedMap.end()){
-                    unorderedMap.insert({buf[i], sizeOfsymbols});
-                }else{
-                    if(iterMap->second < sizeOfsymbols){
-                        iterMap->second = sizeOfsymbols;
-                    }
+                if(diegoCarts[diegoCarts.size() -1] < elem){
+                    return -1;
                 }
-                sizeOfsymbols = 1;
-                counter = k;
-                preChar = buf[indexToStart];
-                i = indexToStart;
-                indexToStart = -1;
-            }else{
-                --counter;
-                sizeOfsymbols++;
 
+                if(diegoCarts[0] > elem){
+                    return -2;
+                }
+
+
+                int mid = l + (r - l) / 2;
+
+                if (diegoCarts[mid] == elem){
+                    isExist = true;
+                    return mid;
+                }
+                else if (diegoCarts[mid] < elem){
+                    l = mid + 1;
+                }
+                else{
+                    r = mid - 1;
+                }
             }
-        }else{
-            auto iterMap = unorderedMap.find(buf[i]);
-            if(iterMap == unorderedMap.end()){
-                unorderedMap.insert({buf[i], 1});
+            return r;
+
+        };
+//        std::cout << diegoCarts.size();
+        for(int i = 0; i < k; ++i){
+            bool isExist = false;
+            int temp = binaryS(0,diegoCarts.size(),collectorsCarts[i],isExist);
+            if(temp == -1){
+                result[i] = diegoCarts.size();
+            }else if(temp == -2){
+                result[i] = 0;
+            }else if(isExist){
+                result[i] = temp;
             }else{
-                sizeOfsymbols++;
+                result[i] = temp + 1;
             }
         }
-
+    }else{
+        result.push_back(0);
     }
 
-    auto result = std::max_element(unorderedMap.begin(), unorderedMap.end(),
-                                   [](const auto el1, const auto el2){
-        return el1.second < el2.second;
-    });
-//
+
+
+
+
     std::ofstream outFile("output.txt");
     if (outFile.is_open()) {
-        outFile << result->second;
+        for(int iter: result)
+            outFile << iter << '\n';
     }
 
     return 0;

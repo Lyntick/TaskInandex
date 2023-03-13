@@ -7,7 +7,6 @@
 
 
 
-
 int main(){
     std::ifstream inFile("input.txt");
     std::string buf;
